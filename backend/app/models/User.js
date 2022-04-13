@@ -15,11 +15,10 @@ class User extends Model {
             where: { address }
         });
         if (user) return [user, false];
-        user = new User({
+        user = await User.create({
             address,
             nonce: generateNonce()
         });
-        user.save();
         return [user, true];
     }
 }
@@ -53,20 +52,16 @@ User.init({
         type: DataTypes.BOOLEAN,
         defaultValue: false
     },
-    lastBlock: {
-        type: DataTypes.INTEGER,
-    },
-    donationsEnabled: {
+    isAdmin: {
         type: DataTypes.BOOLEAN,
         defaultValue: false
     },
-    currentNonce: {
+    lastBlock: {
         type: DataTypes.INTEGER,
-        defaultValue: 0
-    }
+    },
 }, {
     sequelize,
-    modelName: "users"
+    tableName: "users"
 })
 
 export default User;

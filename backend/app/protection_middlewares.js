@@ -22,3 +22,9 @@ export async function onlyAuthorized(req, res, next) {
     req.user = user;
     next();
 }
+
+export async function onlyAdmin(req, res, next) {
+    const { user } = req;
+    if (!user.isAdmin) return res.status(401).json({ message: "Only Admin Allowed" });
+    next();
+}

@@ -7,7 +7,7 @@ import { toChecksumAddress } from '../sanitizers.js';
 import { file, validate } from '../middlewares.js';
 import mime from 'mime';
 
-const { users: User } = sequelize.models;
+const { User } = sequelize.models;
 const router = Router();
 
 router.get(

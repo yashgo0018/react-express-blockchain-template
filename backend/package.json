@@ -5,8 +5,8 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "start": "cd app && node index.js",
-    "dev": "cd app && nodemon index.js"
+    "start": "cd app && node --experimental-json-modules index.js",
+    "dev": "cd app && nodemon --experimental-json-modules index.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

@@ -1,12 +1,13 @@
 import { Router } from "express";
 import { param } from "express-validator";
-import { validate } from "../middlewares.js";
+import { file, validate } from "../middlewares.js";
 import { toChecksumAddress } from "../sanitizers.js";
 import { isValidAddress, isValidUsername } from "../validators.js";
 import sequelize from "../database.js";
 import { onlyAuthorized } from "../protection_middlewares.js";
 import updateObj from "../updateObj.js";
-const { users: User } = sequelize.models;
+
+const { User } = sequelize.models;
 
 const router = Router();
 
@@ -52,13 +53,27 @@ router.get(
 )
 
 router.put(
+    "/image",
+    file("image", "image"),
+    onlyAuthorized,
+    async (req, res) => {
+        const { user } = req;
+        const { image } = req.files;
+        const imageFileName = `${user.id}.${mime.getExtension(image.mimetype)}`;
+        const imagePath = `./uploads/users/${imageFileName}`;
+        image.mv(imagePath);
+        user.image = `/uploads/users/${imageFileName}`;
+        await user.save();
+        res.json({ user });
+    })
+
+router.put(
     "/",
     onlyAuthorized,
     async (req, res) => {
         const { user } = req;
-        const { username, name, image } = req.body;
-        const errors = [];
-        updateObj(user, { username, name, image }, {
+        const { username, name } = req.body;
+        const [done, errors] = await updateObj(user, { username, name }, {
             username: {
                 type: "string",
                 validate: isValidUsername,
@@ -79,44 +94,10 @@ router.put(
                     return name.length < 2;
                 },
                 check: (name) => null
-            },
-            image: {
-                type: "string",
-                validate: (image) => false,
-                check: (image) => null
             }
         })
-        if (username && user.username != username) {
-            if (typeof username != "string" || !isValidUsername(username)) {
-                errors.push({
-                    field: "username",
-                    message: "username format is wrong"
-                });
-            } else
-                user.username = username;
-        }
-        if (name && user.name !== name) {
-            if (typeof name != "string" || name.length < 2) {
-                errors.push({
-                    field: "name",
-                    message: "name format is wrong"
-                });
-            } else
-                user.name = name;
-        }
-        if (image && user.image !== image) {
-            if (typeof image != "string") // TODO: verify the image url 
-            {
-                errors.push({
-                    field: "name",
-                    message: "image format is wrong"
-                });
-            } else
-                user.image = image;
-        }
         if (errors.length !== 0)
             return res.status(400).json({ errors });
-        await user.save();
         res.json({ message: "successfully updated the user" });
     }
 )
